@@ -11,7 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
 </style>
 </head>
 <body>
-<div id="help">3D test: modro nebo + tla + pot + jezero + hiša. Joystick: ↑↓ naprej/nazaj, ←→ levo/desno.</div>
+<div id="help">3D test: modro nebo + tla + pot + jezero + hiša. Esperanza: ↑ naprej · ↓ nazaj · ← levo · → desno · A večji korak.</div>
 
 <a-scene
   vr-mode-ui="enabled:true"
@@ -65,32 +65,85 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
 </a-scene>
 
 <script>
-const rig=document.getElementById("rig");
-const scene=document.querySelector("a-scene");
+const rig = document.getElementById("rig");
+const scene = document.querySelector("a-scene");
 
-function move(forward,side=0){
-  if(!scene.camera)return;
-  const f=new THREE.Vector3();
-  scene.camera.getWorldDirection(f);
-  f.y=0;
-  if(f.lengthSq()<0.001)return;
-  f.normalize();
-  const r=new THREE.Vector3(-f.z,0,f.x);
-  rig.object3D.position.addScaledVector(f,forward);
-  rig.object3D.position.addScaledVector(r,side);
+function move(forward, side = 0){
+  if(!scene.camera) return;
+
+  const forwardVec = new THREE.Vector3();
+  scene.camera.getWorldDirection(forwardVec);
+
+  forwardVec.y = 0;
+  if(forwardVec.lengthSq() < 0.001) return;
+  forwardVec.normalize();
+
+  const rightVec = new THREE.Vector3(
+    -forwardVec.z,
+    0,
+    forwardVec.x
+  );
+
+  rig.object3D.position.addScaledVector(
+    forwardVec,
+    forward
+  );
+
+  rig.object3D.position.addScaledVector(
+    rightVec,
+    side
+  );
 }
 
-addEventListener("keydown",e=>{
-  if(e.repeat)return;
-  switch(e.key){
-    case "MediaFastForward": move(.6,0); break;
-    case "MediaRewind": move(-.6,0); break;
-    case "MediaTrackPrevious": move(0,-.6); break;
-    case "MediaTrackNext": move(0,.6); break;
-    default:return;
+function actionA(){
+  /* Za zdaj A naredi večji korak naprej.
+     Kasneje ga lahko uporabiva za vrata, pobiranje predmetov itd. */
+  move(1.1, 0);
+}
+
+window.addEventListener("keydown", event => {
+
+  if(event.repeat) return;
+
+  let handled = true;
+
+  switch(event.key){
+
+    /* JOYSTICK GOR */
+    case "MediaFastForward":
+      move(0.65, 0);
+      break;
+
+    /* JOYSTICK DOL */
+    case "MediaRewind":
+      move(-0.55, 0);
+      break;
+
+    /* JOYSTICK LEVO */
+    case "MediaTrackPrevious":
+      move(0, -0.55);
+      break;
+
+    /* JOYSTICK DESNO */
+    case "MediaTrackNext":
+      move(0, 0.55);
+      break;
+
+    /* TIPKA A */
+    case "MediaPlayPause":
+      actionA();
+      break;
+
+    default:
+      handled = false;
   }
-  e.preventDefault();
-},{capture:true});
+
+  if(handled){
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+}, {capture:true});
 </script>
 </body>
 </html>
